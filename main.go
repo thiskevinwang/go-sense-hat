@@ -39,12 +39,7 @@ func main() {
 		{o, o, o, g, g, o, o, o},
 	}
 
-	for i, row := range grid {
-		for j, color := range row {
-			fb.SetPixel(i, j, color)
-		}
-	}
-
+	setGrid(grid, fb)
 	screen.Draw(fb)
 
 	// Capture Ctrl+C
@@ -70,17 +65,69 @@ func main() {
 		case e := <-input.Events:
 			switch e.Code {
 			case stick.Enter:
+				// reset the grid
 				fmt.Println("⏎")
+
+				grid = [8][8]color.Pixel565{
+					{o, o, o, o, o, o, o, o},
+					{o, g, g, o, o, g, g, o},
+					{g, m, m, g, g, p, p, g},
+					{g, m, m, r, r, r, p, g},
+					{g, m, m, m, r, r, r, g},
+					{o, g, m, m, m, r, g, o},
+					{o, o, g, m, m, g, o, o},
+					{o, o, o, g, g, o, o, o},
+				}
+
+				setGrid(grid, fb)
+				screen.Draw(fb)
 			case stick.Up:
 				fmt.Println("↑")
+
+				newGrid := shiftGrid(grid, 0, 1)
+				setGrid(newGrid, fb)
+				screen.Draw(fb)
+				grid = newGrid
 			case stick.Down:
 				fmt.Println("↓")
+
+				newGrid := shiftGrid(grid, 0, -1)
+				setGrid(newGrid, fb)
+				screen.Draw(fb)
+				grid = newGrid
 			case stick.Left:
 				fmt.Println("←")
+
+				newGrid := shiftGrid(grid, 1, 0)
+				setGrid(newGrid, fb)
+				screen.Draw(fb)
+				grid = newGrid
 			case stick.Right:
 				fmt.Println("→")
+				newGrid := shiftGrid(grid, -1, 0)
+				setGrid(newGrid, fb)
+				screen.Draw(fb)
+				grid = newGrid
 			}
 		}
 	}
 
+}
+
+func setGrid(grid [8][8]color.Pixel565, fb *screen.FrameBuffer) {
+	for i, row := range grid {
+		for j, color := range row {
+			fb.SetPixel(i, j, color)
+		}
+	}
+}
+
+func shiftGrid(grid [8][8]color.Pixel565, x int, y int) [8][8]color.Pixel565 {
+	newGrid := grid
+	for i, row := range grid {
+		for j, _ := range row {
+			newGrid[i][j] = grid[(i+x+8)%8][(j+y+8)%8]
+		}
+	}
+	return newGrid
 }
